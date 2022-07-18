@@ -10,6 +10,7 @@ type State int
 const (
 	stateDefault State = iota
 	statePreformatted
+	stateUnorderedList
 )
 
 // converts a given string of Gemtext to basic HTML.
@@ -17,7 +18,9 @@ func ToHTML(gemtext string) string {
 	var output strings.Builder
 	var state State = stateDefault
 
-	for _, line := range strings.Split(gemtext, "\n") {
+	lines := strings.Split(gemtext, "\n")
+
+	for i, line := range lines {
 		if state == statePreformatted {
 			if strings.HasPrefix(line, "```") {
 				// closing preformatted line
@@ -41,7 +44,19 @@ func ToHTML(gemtext string) string {
 			state = statePreformatted
 			output.WriteString(convertPreformattedOpening(line))
 		} else if strings.HasPrefix(line, "#") {
+			// heading line
 			output.WriteString(convertHeading(line))
+		} else if strings.HasPrefix(line, "*") {
+			// unordered list line
+			if state != stateUnorderedList {
+				output.WriteString("<ul>")
+				state = stateUnorderedList
+			}
+			output.WriteString(convertUnorderedListItem(line))
+			if len(lines) == i+1 || !strings.HasPrefix(lines[i+1], "*") { // if this is the last link
+				output.WriteString("</ul>")
+				state = stateDefault
+			}
 		} else {
 			// (default) text line
 			output.WriteString("<p>" + line + "</p>")
@@ -132,8 +147,12 @@ func convertHeading(line string) string {
 		headingText := strings.TrimPrefix(line, "#")
 		heading = heading + strings.TrimSpace(headingText)
 		heading = heading + "</h1>"
-
 	}
 
 	return heading
+}
+
+func convertUnorderedListItem(line string) string {
+	listitem := strings.TrimSpace(strings.TrimPrefix(line, "*"))
+	return "<li>" + listitem + "</li>"
 }

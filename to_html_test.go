@@ -115,3 +115,24 @@ func TestToHTML_ConvertHeadingThree(t *testing.T) {
 
 	assertEqual(t, test, ref)
 }
+
+// unordered lists
+
+func TestToHTML_ConvertList(t *testing.T) {
+	src := "* eggs"
+	test := ToHTML(src)
+	ref := "<ul><li>eggs</li></ul>"
+
+	assertEqual(t, test, ref)
+}
+
+func TestToHTML_ConvertListMultiItem(t *testing.T) {
+	src := `* eggs
+* milk
+* white bread
+* greens`
+	test := ToHTML(src)
+	ref := "<ul>" + "<li>eggs</li>" + "<li>milk</li>" + "<li>white bread</li>" + "<li>greens</li>" + "</ul>"
+
+	assertEqual(t, test, ref)
+}
