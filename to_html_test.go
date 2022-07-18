@@ -136,3 +136,24 @@ func TestToHTML_ConvertListMultiItem(t *testing.T) {
 
 	assertEqual(t, test, ref)
 }
+
+// blockquotes
+
+func TestToHTML_ConvertBlockquote(t *testing.T) {
+	src := "> quote here"
+	test := ToHTML(src)
+	ref := "<blockquote><p>quote here</p></blockquote>"
+
+	assertEqual(t, test, ref)
+}
+
+func TestToHTML_ConvertBlockquoteMultiline(t *testing.T) {
+	src := `> this is a
+>   multiline spanning
+>
+>blockquote`
+	test := ToHTML(src)
+	ref := "<blockquote><p>this is a</p><p>multiline spanning</p><br /><p>blockquote</p></blockquote>"
+
+	assertEqual(t, test, ref)
+}

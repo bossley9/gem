@@ -11,6 +11,7 @@ const (
 	stateDefault State = iota
 	statePreformatted
 	stateUnorderedList
+	stateBlockquote
 )
 
 // converts a given string of Gemtext to basic HTML.
@@ -35,7 +36,7 @@ func ToHTML(gemtext string) string {
 
 		if len(line) == 0 {
 			// whitespace line
-			output.WriteString("<br />")
+			output.WriteString(convertWhitespace(line))
 		} else if strings.HasPrefix(line, "=>") {
 			// link line
 			output.WriteString(convertLink(line))
@@ -53,17 +54,39 @@ func ToHTML(gemtext string) string {
 				state = stateUnorderedList
 			}
 			output.WriteString(convertUnorderedListItem(line))
-			if len(lines) == i+1 || !strings.HasPrefix(lines[i+1], "*") { // if this is the last link
+			if nextHasPrefix(lines, i, "*") {
 				output.WriteString("</ul>")
 				state = stateDefault
 			}
+		} else if strings.HasPrefix(line, ">") {
+			// blockquote line
+			if state != stateBlockquote {
+				output.WriteString("<blockquote>")
+				state = stateBlockquote
+			}
+			output.WriteString(convertBlockquote(line))
+			if nextHasPrefix(lines, i, ">") {
+				output.WriteString("</blockquote>")
+				state = stateDefault
+			}
+
 		} else {
 			// (default) text line
-			output.WriteString("<p>" + line + "</p>")
+			output.WriteString(convertText(line))
 		}
 	}
 
 	return output.String()
+}
+
+// converts a given Gemtext whitespace line to HTML
+func convertWhitespace(line string) string {
+	return "<br />"
+}
+
+// converts a given Gemtext text line to HTML
+func convertText(line string) string {
+	return "<p>" + line + "</p>"
 }
 
 // converts a given Gemtext link to HTML
@@ -152,7 +175,27 @@ func convertHeading(line string) string {
 	return heading
 }
 
+// converts a given Gemtext unordered list to HTML
 func convertUnorderedListItem(line string) string {
 	listitem := strings.TrimSpace(strings.TrimPrefix(line, "*"))
 	return "<li>" + listitem + "</li>"
+}
+
+// given an array of strings, the current index, and a prefix, returns true if
+// the next line also has that prefix
+func nextHasPrefix(lines []string, index int, prefix string) bool {
+	return len(lines) == index+1 || !strings.HasPrefix(lines[index+1], prefix)
+}
+
+// converts a given Gemtext quote line to HTML
+func convertBlockquote(line string) string {
+	text := strings.TrimSpace(strings.TrimPrefix(line, ">"))
+	quote := ""
+	if len(text) == 0 {
+		quote = convertWhitespace(text)
+	} else {
+		quote = convertText(text)
+	}
+
+	return quote
 }
