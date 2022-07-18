@@ -40,6 +40,8 @@ func ToHTML(gemtext string) string {
 			// opening preformatted line
 			state = statePreformatted
 			output.WriteString(convertPreformattedOpening(line))
+		} else if strings.HasPrefix(line, "#") {
+			output.WriteString(convertHeading(line))
 		} else {
 			// (default) text line
 			output.WriteString("<p>" + line + "</p>")
@@ -104,4 +106,34 @@ func convertPreformattedOpening(line string) string {
 
 func convertPreformattedClosing(line string) string {
 	return "</code></pre></figure>"
+}
+
+// converts a given Gemtext heading to HTML
+func convertHeading(line string) string {
+	heading := ""
+
+	if strings.HasPrefix(line, "###") {
+		// heading 3
+		heading = heading + "<h3>"
+		headingText := strings.TrimPrefix(line, "###")
+		heading = heading + strings.TrimSpace(headingText)
+		heading = heading + "</h3>"
+
+	} else if strings.HasPrefix(line, "##") {
+		// heading 2
+		heading = heading + "<h2>"
+		headingText := strings.TrimPrefix(line, "##")
+		heading = heading + strings.TrimSpace(headingText)
+		heading = heading + "</h2>"
+
+	} else {
+		// heading 1
+		heading = heading + "<h1>"
+		headingText := strings.TrimPrefix(line, "#")
+		heading = heading + strings.TrimSpace(headingText)
+		heading = heading + "</h1>"
+
+	}
+
+	return heading
 }
