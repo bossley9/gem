@@ -58,6 +58,14 @@ func TestToHTML_ConvertConsecutiveLinks(t *testing.T) {
 	assertEqual(t, test, ref)
 }
 
+func TestToHTML_ConvertLinkImages(t *testing.T) {
+	src := `=> car.png my car is what I would call "cool"`
+	test := ToHTML(src)
+	ref := `<p><img src="car.png" alt="my car is what I would call \"cool\"" /></p>`
+
+	assertEqual(t, test, ref)
+}
+
 // preformatted text
 
 func TestToHTML_ConvertPreformatted(t *testing.T) {

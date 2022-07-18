@@ -5,19 +5,17 @@ import (
 	"strings"
 )
 
-type State int
-
-const (
-	stateDefault State = iota
-	statePreformatted
-	stateUnorderedList
-	stateBlockquote
-)
-
 // converts a given string of Gemtext to basic HTML.
 func ToHTML(gemtext string) string {
+	const (
+		stateDefault = iota
+		statePreformatted
+		stateUnorderedList
+		stateBlockquote
+	)
+
 	var output strings.Builder
-	var state State = stateDefault
+	var state = stateDefault
 
 	lines := strings.Split(gemtext, "\n")
 
@@ -110,7 +108,7 @@ func convertLink(line string) string {
 	if match {
 		output = output + `<img src="` + url + `" alt="`
 		if len(name) > 0 {
-			output = output + name
+			output = output + strings.ReplaceAll(name, "\"", "\\\"")
 		}
 		output = output + `" />`
 
