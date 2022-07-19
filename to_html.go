@@ -5,10 +5,29 @@ import (
 	"strings"
 )
 
+type lineType int
+
+const (
+	lineParagraph lineType = iota
+	lineWhitespace
+	lineLink
+	linePreformattedEdge
+	lineHeadingOne
+	lineHeadingTwo
+	lineHeadingThree
+	lineUnorderedListItem
+	lineBlockQuote
+)
+
 // converts a given string of Gemtext to basic HTML.
 func ToHTML(gemtext string) string {
+	if len(gemtext) == 0 {
+		return ""
+	}
+
 	const (
 		stateDefault = iota
+		stateParagraph
 		statePreformatted
 		stateUnorderedList
 		stateBlockquote
@@ -20,8 +39,10 @@ func ToHTML(gemtext string) string {
 	lines := strings.Split(gemtext, "\n")
 
 	for i, line := range lines {
+		lineType := getLineType(line)
+
 		if state == statePreformatted {
-			if strings.HasPrefix(line, "```") {
+			if lineType == linePreformattedEdge {
 				// closing preformatted line
 				output.WriteString(convertPreformattedClosing(line))
 				state = stateDefault
@@ -32,59 +53,106 @@ func ToHTML(gemtext string) string {
 			continue
 		}
 
-		if len(line) == 0 {
-			// whitespace line
-			output.WriteString(convertWhitespace(line))
-		} else if strings.HasPrefix(line, "=>") {
-			// link line
+		switch lineType {
+		case lineLink:
 			output.WriteString(convertLink(line))
-		} else if strings.HasPrefix(line, "```") {
+		case linePreformattedEdge:
 			// opening preformatted line
 			state = statePreformatted
 			output.WriteString(convertPreformattedOpening(line))
-		} else if strings.HasPrefix(line, "#") {
-			// heading line
+		case lineHeadingThree:
+			fallthrough
+		case lineHeadingTwo:
+			fallthrough
+		case lineHeadingOne:
 			output.WriteString(convertHeading(line))
-		} else if strings.HasPrefix(line, "*") {
-			// unordered list line
+		case lineUnorderedListItem:
 			if state != stateUnorderedList {
 				output.WriteString("<ul>")
 				state = stateUnorderedList
 			}
 			output.WriteString(convertUnorderedListItem(line))
-			if nextHasPrefix(lines, i, "*") {
+			if nextIsNotType(lines, i, lineUnorderedListItem) {
 				output.WriteString("</ul>")
 				state = stateDefault
 			}
-		} else if strings.HasPrefix(line, ">") {
-			// blockquote line
+		case lineBlockQuote:
+			// opening blockquote
 			if state != stateBlockquote {
-				output.WriteString("<blockquote>")
+				output.WriteString("<blockquote><p>")
 				state = stateBlockquote
 			}
-			output.WriteString(convertBlockquote(line))
-			if nextHasPrefix(lines, i, ">") {
-				output.WriteString("</blockquote>")
+			quote := convertBlockquote(line)
+			output.WriteString(quote)
+			// closing blockquote
+			if nextIsNotType(lines, i, lineBlockQuote) {
+				output.WriteString("</p></blockquote>")
 				state = stateDefault
+			} else {
+				// between blockquote lines
+				if len(quote) > 0 {
+					output.WriteString(convertBlockquoteFiller(lines[i+1]))
+				}
 			}
-
-		} else {
-			// (default) text line
-			output.WriteString(convertText(line))
+		case lineWhitespace:
+			if state == stateParagraph {
+				output.WriteString("<br />")
+			}
+		case lineParagraph:
+			fallthrough
+		default:
+			// opening paragraph
+			if state != stateParagraph {
+				output.WriteString("<p>")
+				state = stateParagraph
+			}
+			output.WriteString(line)
+			// closing paragraph
+			if nextIsNotType(lines, i, lineParagraph) {
+				output.WriteString("</p>")
+				state = stateDefault
+			} else {
+				output.WriteString("<br />")
+			}
 		}
 	}
 
 	return output.String()
 }
 
-// converts a given Gemtext whitespace line to HTML
-func convertWhitespace(line string) string {
-	return "<br />"
-}
+// given a line of text, returns the Gemtext line type
+func getLineType(line string) lineType {
+	var lineType lineType
 
-// converts a given Gemtext text line to HTML
-func convertText(line string) string {
-	return "<p>" + line + "</p>"
+	if len(line) == 0 {
+		lineType = lineWhitespace
+
+	} else if strings.HasPrefix(line, "=>") {
+		lineType = lineLink
+
+	} else if strings.HasPrefix(line, "```") {
+		lineType = linePreformattedEdge
+
+	} else if strings.HasPrefix(line, "###") {
+		lineType = lineHeadingThree
+
+	} else if strings.HasPrefix(line, "##") {
+		lineType = lineHeadingTwo
+
+	} else if strings.HasPrefix(line, "#") {
+		lineType = lineHeadingOne
+
+	} else if strings.HasPrefix(line, "*") {
+		lineType = lineUnorderedListItem
+
+	} else if strings.HasPrefix(line, ">") {
+		lineType = lineBlockQuote
+
+	} else {
+		lineType = lineParagraph
+	}
+
+	return lineType
 }
 
 // converts a given Gemtext link to HTML
@@ -147,27 +215,19 @@ func convertPreformattedClosing(line string) string {
 // converts a given Gemtext heading to HTML
 func convertHeading(line string) string {
 	heading := ""
+	lineType := getLineType(line)
 
-	if strings.HasPrefix(line, "###") {
-		// heading 3
-		heading = heading + "<h3>"
+	if lineType == lineHeadingThree {
 		headingText := strings.TrimPrefix(line, "###")
-		heading = heading + strings.TrimSpace(headingText)
-		heading = heading + "</h3>"
+		heading = heading + "<h3>" + strings.TrimSpace(headingText) + "</h3>"
 
-	} else if strings.HasPrefix(line, "##") {
-		// heading 2
-		heading = heading + "<h2>"
+	} else if lineType == lineHeadingTwo {
 		headingText := strings.TrimPrefix(line, "##")
-		heading = heading + strings.TrimSpace(headingText)
-		heading = heading + "</h2>"
+		heading = heading + "<h2>" + strings.TrimSpace(headingText) + "</h2>"
 
 	} else {
-		// heading 1
-		heading = heading + "<h1>"
 		headingText := strings.TrimPrefix(line, "#")
-		heading = heading + strings.TrimSpace(headingText)
-		heading = heading + "</h1>"
+		heading = heading + "<h1>" + strings.TrimSpace(headingText) + "</h1>"
 	}
 
 	return heading
@@ -179,21 +239,22 @@ func convertUnorderedListItem(line string) string {
 	return "<li>" + listitem + "</li>"
 }
 
-// given an array of strings, the current index, and a prefix, returns true if
-// the next line also has that prefix
-func nextHasPrefix(lines []string, index int, prefix string) bool {
-	return len(lines) == index+1 || !strings.HasPrefix(lines[index+1], prefix)
+// given an array of strings, the current index, and a line type, returns true if
+// the next line is not that type
+func nextIsNotType(lines []string, index int, lineType lineType) bool {
+	return len(lines) == index+1 || getLineType(lines[index+1]) != lineType
 }
 
 // converts a given Gemtext quote line to HTML
 func convertBlockquote(line string) string {
-	text := strings.TrimSpace(strings.TrimPrefix(line, ">"))
-	quote := ""
-	if len(text) == 0 {
-		quote = convertWhitespace(text)
-	} else {
-		quote = convertText(text)
-	}
+	return strings.TrimSpace(strings.TrimPrefix(line, ">"))
+}
 
-	return quote
+// converts a given Gemtext quote lookahead line to HTML
+func convertBlockquoteFiller(line string) string {
+	if len(convertBlockquote(line)) == 0 {
+		return "</p><p>"
+	} else {
+		return "<br />"
+	}
 }

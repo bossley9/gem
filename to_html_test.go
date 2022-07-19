@@ -4,7 +4,7 @@ import "testing"
 
 // text lines
 
-func TestToHTML_ConvertTextLine(t *testing.T) {
+func TestToHTML_ConvertParagraph(t *testing.T) {
 	src := "this is a text line"
 	test := ToHTML(src)
 	ref := "<p>this is a text line</p>"
@@ -12,12 +12,31 @@ func TestToHTML_ConvertTextLine(t *testing.T) {
 	assertEqual(t, test, ref)
 }
 
-// whitespace lines
-
 func TestToHTML_ConvertWhitespace(t *testing.T) {
 	src := ""
 	test := ToHTML(src)
-	ref := "<br />"
+	ref := ""
+
+	assertEqual(t, test, ref)
+}
+
+func TestToHTML_ConvertMultipleParagraphs(t *testing.T) {
+	src := `this is the story
+of a man who
+did something very bad`
+	test := ToHTML(src)
+	ref := "<p>this is the story<br />of a man who<br />did something very bad</p>"
+
+	assertEqual(t, test, ref)
+}
+
+func TestToHTML_ConvertSpaceBetweenParagraphs(t *testing.T) {
+	src := `this is a paragraph.
+
+this is another paragraph
+that is multiline`
+	test := ToHTML(src)
+	ref := "<p>this is a paragraph.</p>" + "<p>this is another paragraph<br />that is multiline</p>"
 
 	assertEqual(t, test, ref)
 }
@@ -161,7 +180,7 @@ func TestToHTML_ConvertBlockquoteMultiline(t *testing.T) {
 >
 >blockquote`
 	test := ToHTML(src)
-	ref := "<blockquote><p>this is a</p><p>multiline spanning</p><br /><p>blockquote</p></blockquote>"
+	ref := "<blockquote><p>this is a<br />multiline spanning</p><p>blockquote</p></blockquote>"
 
 	assertEqual(t, test, ref)
 }
