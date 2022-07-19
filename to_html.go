@@ -1,6 +1,7 @@
 package gem
 
 import (
+	"html"
 	"regexp"
 	"strings"
 )
@@ -48,7 +49,7 @@ func ToHTML(gemtext string) string {
 				state = stateDefault
 			} else {
 				// preformatted line
-				output.WriteString(line + "\n")
+				output.WriteString(html.EscapeString(line) + "\n")
 			}
 			continue
 		}
@@ -174,18 +175,18 @@ func convertLink(line string) string {
 	// output <img> or <a> based on url suffix
 	match, _ := regexp.MatchString(".*.(gif|jpg|jpeg|png|svg|webp)", url)
 	if match {
-		output = output + `<img src="` + url + `" alt="`
+		output = output + `<img src="` + html.EscapeString(url) + `" alt="`
 		if len(name) > 0 {
-			output = output + strings.ReplaceAll(name, "\"", "\\\"")
+			output = output + html.EscapeString(name)
 		}
 		output = output + `" />`
 
 	} else {
-		output = output + `<a href="` + url + `">`
+		output = output + `<a href="` + html.EscapeString(url) + `">`
 		if len(name) > 0 {
-			output = output + name
+			output = output + html.EscapeString(name)
 		} else {
-			output = output + url
+			output = output + html.EscapeString(url)
 		}
 		output = output + `</a>`
 
@@ -201,7 +202,7 @@ func convertPreformattedOpening(line string) string {
 
 	alt := strings.TrimSpace(strings.TrimPrefix(line, "```"))
 	if len(alt) > 0 {
-		output = output + "<figcaption>" + alt + "</figcaption>"
+		output = output + "<figcaption>" + html.EscapeString(alt) + "</figcaption>"
 	}
 
 	output = output + "<pre><code>"
@@ -218,16 +219,16 @@ func convertHeading(line string) string {
 	lineType := getLineType(line)
 
 	if lineType == lineHeadingThree {
-		headingText := strings.TrimPrefix(line, "###")
-		heading = heading + "<h3>" + strings.TrimSpace(headingText) + "</h3>"
+		headingText := strings.TrimSpace(strings.TrimPrefix(line, "###"))
+		heading = heading + "<h3>" + html.EscapeString(headingText) + "</h3>"
 
 	} else if lineType == lineHeadingTwo {
-		headingText := strings.TrimPrefix(line, "##")
-		heading = heading + "<h2>" + strings.TrimSpace(headingText) + "</h2>"
+		headingText := strings.TrimSpace(strings.TrimPrefix(line, "##"))
+		heading = heading + "<h2>" + html.EscapeString(headingText) + "</h2>"
 
 	} else {
-		headingText := strings.TrimPrefix(line, "#")
-		heading = heading + "<h1>" + strings.TrimSpace(headingText) + "</h1>"
+		headingText := strings.TrimSpace(strings.TrimPrefix(line, "#"))
+		heading = heading + "<h1>" + html.EscapeString(headingText) + "</h1>"
 	}
 
 	return heading
@@ -236,7 +237,7 @@ func convertHeading(line string) string {
 // converts a given Gemtext unordered list to HTML
 func convertUnorderedListItem(line string) string {
 	listitem := strings.TrimSpace(strings.TrimPrefix(line, "*"))
-	return "<li>" + listitem + "</li>"
+	return "<li>" + html.EscapeString(listitem) + "</li>"
 }
 
 // given an array of strings, the current index, and a line type, returns true if
@@ -247,7 +248,8 @@ func nextIsNotType(lines []string, index int, lineType lineType) bool {
 
 // converts a given Gemtext quote line to HTML
 func convertBlockquote(line string) string {
-	return strings.TrimSpace(strings.TrimPrefix(line, ">"))
+	text := strings.TrimSpace(strings.TrimPrefix(line, ">"))
+	return html.EscapeString(text)
 }
 
 // converts a given Gemtext quote lookahead line to HTML

@@ -80,7 +80,7 @@ func TestToHTML_ConvertConsecutiveLinks(t *testing.T) {
 func TestToHTML_ConvertLinkImages(t *testing.T) {
 	src := `=> car.png my car is what I would call "cool"`
 	test := ToHTML(src)
-	ref := `<p><img src="car.png" alt="my car is what I would call \"cool\"" /></p>`
+	ref := `<p><img src="car.png" alt="my car is what I would call &#34;cool&#34;" /></p>`
 
 	assertEqual(t, test, ref)
 }
@@ -96,10 +96,10 @@ Hello! Whitespace    is preserved here
 ` + "```"
 	test := ToHTML(src)
 	ref := `<figure><pre><code>
-=> example.com this will not be converted
+=&gt; example.com this will not be converted
 
 Hello! Whitespace    is preserved here
-<p>fake html tags</p>
+&lt;p&gt;fake html tags&lt;/p&gt;
 </code></pre></figure>`
 
 	assertEqual(t, test, ref)
