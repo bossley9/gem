@@ -1,6 +1,10 @@
 package gem
 
-import "testing"
+import (
+	"testing"
+
+	th "git.sr.ht/~bossley9/gem/pkg/testhelpers"
+)
 
 // text lines
 
@@ -9,7 +13,7 @@ func TestToHTML_ConvertParagraph(t *testing.T) {
 	test := ToHTML(src)
 	ref := "<p>this is a text line</p>"
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertWhitespace(t *testing.T) {
@@ -17,7 +21,7 @@ func TestToHTML_ConvertWhitespace(t *testing.T) {
 	test := ToHTML(src)
 	ref := ""
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertMultipleParagraphs(t *testing.T) {
@@ -27,7 +31,7 @@ did something very bad`
 	test := ToHTML(src)
 	ref := "<p>this is the story<br />of a man who<br />did something very bad</p>"
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertSpaceBetweenParagraphs(t *testing.T) {
@@ -38,7 +42,7 @@ that is multiline`
 	test := ToHTML(src)
 	ref := "<p>this is a paragraph.</p>" + "<p>this is another paragraph<br />that is multiline</p>"
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 // links
@@ -48,7 +52,7 @@ func TestToHTML_ConvertLink(t *testing.T) {
 	test := ToHTML(src)
 	ref := `<p><a href="example.com">my website</a></p>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertLinkVariableWhitespace(t *testing.T) {
@@ -56,7 +60,7 @@ func TestToHTML_ConvertLinkVariableWhitespace(t *testing.T) {
 	test := ToHTML(src)
 	ref := `<p><a href="example.com">my website</a></p>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertLinkNoLinkName(t *testing.T) {
@@ -64,7 +68,7 @@ func TestToHTML_ConvertLinkNoLinkName(t *testing.T) {
 	test := ToHTML(src)
 	ref := `<p><a href="example.com">example.com</a></p>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertConsecutiveLinks(t *testing.T) {
@@ -74,7 +78,7 @@ func TestToHTML_ConvertConsecutiveLinks(t *testing.T) {
 	test := ToHTML(src)
 	ref := `<p><a href="example.com">my website</a></p><p><a href="website.gov">a governmental agency</a></p><p><a href="search.com">search.com</a></p>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertLinkImages(t *testing.T) {
@@ -82,7 +86,7 @@ func TestToHTML_ConvertLinkImages(t *testing.T) {
 	test := ToHTML(src)
 	ref := `<p><img src="car.png" alt="my car is what I would call &#34;cool&#34;" /></p>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 // preformatted text
@@ -102,7 +106,7 @@ Hello! Whitespace    is preserved here
 &lt;p&gt;fake html tags&lt;/p&gt;
 </code></pre></figure>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertPreformattedAltText(t *testing.T) {
@@ -114,7 +118,7 @@ some arbitrary code content
 some arbitrary code content
 </code></pre></figure>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 // headings
@@ -122,25 +126,40 @@ some arbitrary code content
 func TestToHTML_ConvertHeadingOne(t *testing.T) {
 	src := "#   heading here   "
 	test := ToHTML(src)
-	ref := "<h1>heading here</h1>"
+	ref := `<h1 id="heading-here">heading here</h1>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertHeadingTwo(t *testing.T) {
 	src := "##heading here"
 	test := ToHTML(src)
-	ref := "<h2>heading here</h2>"
+	ref := `<h2 id="heading-here">heading here</h2>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertHeadingThree(t *testing.T) {
 	src := "### heading here"
 	test := ToHTML(src)
-	ref := "<h3>heading here</h3>"
+	ref := `<h3 id="heading-here">heading here</h3>`
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
+}
+
+func TestToHTML_ConvertIdenticalHeadingIDs(t *testing.T) {
+	src := `# reference
+## reference
+### reference
+### reference
+`
+	test := ToHTML(src)
+	ref := `<h1 id="reference">reference</h1>` +
+		`<h2 id="reference-1">reference</h2>` +
+		`<h3 id="reference-2">reference</h3>` +
+		`<h3 id="reference-3">reference</h3>`
+
+	th.AssertEqual(t, test, ref)
 }
 
 // unordered lists
@@ -150,7 +169,7 @@ func TestToHTML_ConvertList(t *testing.T) {
 	test := ToHTML(src)
 	ref := "<ul><li>eggs</li></ul>"
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertListMultiItem(t *testing.T) {
@@ -161,7 +180,7 @@ func TestToHTML_ConvertListMultiItem(t *testing.T) {
 	test := ToHTML(src)
 	ref := "<ul>" + "<li>eggs</li>" + "<li>milk</li>" + "<li>white bread</li>" + "<li>greens</li>" + "</ul>"
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 // blockquotes
@@ -171,7 +190,7 @@ func TestToHTML_ConvertBlockquote(t *testing.T) {
 	test := ToHTML(src)
 	ref := "<blockquote><p>quote here</p></blockquote>"
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }
 
 func TestToHTML_ConvertBlockquoteMultiline(t *testing.T) {
@@ -182,5 +201,5 @@ func TestToHTML_ConvertBlockquoteMultiline(t *testing.T) {
 	test := ToHTML(src)
 	ref := "<blockquote><p>this is a<br />multiline spanning</p><p>blockquote</p></blockquote>"
 
-	assertEqual(t, test, ref)
+	th.AssertEqual(t, test, ref)
 }

@@ -1,8 +1,8 @@
-package gem
+package testhelpers
 
 import "testing"
 
-func assertEqual[T comparable](t *testing.T, test, ref T) {
+func AssertEqual[T comparable](t *testing.T, test, ref T) {
 	t.Helper()
 
 	if test != ref {

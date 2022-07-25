@@ -3,7 +3,10 @@ package gem
 import (
 	"html"
 	"regexp"
+	"strconv"
 	"strings"
+
+	"git.sr.ht/~bossley9/gem/pkg/url"
 )
 
 type lineType int
@@ -25,6 +28,7 @@ func ToHTML(gemtext string) string {
 	if len(gemtext) == 0 {
 		return ""
 	}
+	idRefs := make(map[string]int, 0)
 
 	const (
 		stateDefault = iota
@@ -66,7 +70,15 @@ func ToHTML(gemtext string) string {
 		case lineHeadingTwo:
 			fallthrough
 		case lineHeadingOne:
-			output.WriteString(convertHeading(line))
+			id := url.GenerateID(line)
+			idCount, ok := idRefs[id]
+			if ok {
+				idRefs[id] = idCount + 1
+				id = id + "-" + strconv.Itoa(idCount)
+			} else {
+				idRefs[id] = 1
+			}
+			output.WriteString(convertHeading(line, id))
 		case lineUnorderedListItem:
 			if state != stateUnorderedList {
 				output.WriteString("<ul>")
@@ -214,24 +226,26 @@ func convertPreformattedClosing(line string) string {
 }
 
 // converts a given Gemtext heading to HTML
-func convertHeading(line string) string {
-	heading := ""
+func convertHeading(line string, id string) string {
 	lineType := getLineType(line)
+	headingNum := ""
+	headingPrefix := ""
 
 	if lineType == lineHeadingThree {
-		headingText := strings.TrimSpace(strings.TrimPrefix(line, "###"))
-		heading = heading + "<h3>" + html.EscapeString(headingText) + "</h3>"
+		headingNum = "3"
+		headingPrefix = "###"
 
 	} else if lineType == lineHeadingTwo {
-		headingText := strings.TrimSpace(strings.TrimPrefix(line, "##"))
-		heading = heading + "<h2>" + html.EscapeString(headingText) + "</h2>"
+		headingNum = "2"
+		headingPrefix = "##"
 
 	} else {
-		headingText := strings.TrimSpace(strings.TrimPrefix(line, "#"))
-		heading = heading + "<h1>" + html.EscapeString(headingText) + "</h1>"
+		headingNum = "1"
+		headingPrefix = "#"
 	}
 
-	return heading
+	headingText := strings.TrimSpace(strings.TrimPrefix(line, headingPrefix))
+	return "<h" + headingNum + ` id="` + id + `">` + html.EscapeString(headingText) + "</h" + headingNum + ">"
 }
 
 // converts a given Gemtext unordered list to HTML

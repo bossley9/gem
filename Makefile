@@ -6,7 +6,7 @@ make: test
 	go build -o ./$(EXE) cmd/main.go
 
 test:
-	go test
+	go test ./ ./pkg/url
 
 clean:
 	rm ./$(EXE)
