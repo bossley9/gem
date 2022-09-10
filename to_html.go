@@ -263,7 +263,7 @@ func convertHeading(line string, id string) string {
 	}
 
 	headingText := strings.TrimSpace(strings.TrimPrefix(line, headingPrefix))
-	return "<h" + headingNum + ` id="` + id + `">` + html.EscapeString(headingText) + "</h" + headingNum + ">"
+	return "<h" + headingNum + ` id="` + id + `"><a href="#` + id + `">` + html.EscapeString(headingText) + "</a></h" + headingNum + ">"
 }
 
 // converts a given Gemtext unordered list to HTML

@@ -150,7 +150,7 @@ some arbitrary code content
 func TestToHTML_ConvertHeadingOne(t *testing.T) {
 	src := "#   heading here   "
 	test := ToHTML(src)
-	ref := `<h1 id="heading-here">heading here</h1>`
+	ref := `<h1 id="heading-here"><a href="#heading-here">heading here</a></h1>`
 
 	th.AssertEqual(t, test, ref)
 }
@@ -158,7 +158,7 @@ func TestToHTML_ConvertHeadingOne(t *testing.T) {
 func TestToHTML_ConvertHeadingTwo(t *testing.T) {
 	src := "##heading here"
 	test := ToHTML(src)
-	ref := `<h2 id="heading-here">heading here</h2>`
+	ref := `<h2 id="heading-here"><a href="#heading-here">heading here</a></h2>`
 
 	th.AssertEqual(t, test, ref)
 }
@@ -166,7 +166,7 @@ func TestToHTML_ConvertHeadingTwo(t *testing.T) {
 func TestToHTML_ConvertHeadingThree(t *testing.T) {
 	src := "### heading here"
 	test := ToHTML(src)
-	ref := `<h3 id="heading-here">heading here</h3>`
+	ref := `<h3 id="heading-here"><a href="#heading-here">heading here</a></h3>`
 
 	th.AssertEqual(t, test, ref)
 }
@@ -178,10 +178,10 @@ func TestToHTML_ConvertIdenticalHeadingIDs(t *testing.T) {
 ### reference
 `
 	test := ToHTML(src)
-	ref := `<h1 id="reference">reference</h1>` +
-		`<h2 id="reference-1">reference</h2>` +
-		`<h3 id="reference-2">reference</h3>` +
-		`<h3 id="reference-3">reference</h3>`
+	ref := `<h1 id="reference"><a href="#reference">reference</a></h1>` +
+		`<h2 id="reference-1"><a href="#reference-1">reference</a></h2>` +
+		`<h3 id="reference-2"><a href="#reference-2">reference</a></h3>` +
+		`<h3 id="reference-3"><a href="#reference-3">reference</a></h3>`
 
 	th.AssertEqual(t, test, ref)
 }
