@@ -89,6 +89,30 @@ func TestToHTML_ConvertLinkImages(t *testing.T) {
 	th.AssertEqual(t, test, ref)
 }
 
+func TestToHTML_ConvertLinkFakeImageExtension(t *testing.T) {
+	src := `=> carpng my car is what I would call "cool"`
+	test := ToHTML(src)
+	ref := `<p><a href="carpng">my car is what I would call &#34;cool&#34;</a></p>`
+
+	th.AssertEqual(t, test, ref)
+}
+
+func TestToHTML_ConvertLinkAudio(t *testing.T) {
+	src := `=> sounds.mp3 this is what my car sounds like`
+	test := ToHTML(src)
+	ref := "<p><audio controls>" + `<source src="sounds.mp3" type="audio/mp3" />` + "Sorry, your browser doesn't support embedded audio." + "</audio></p>"
+
+	th.AssertEqual(t, test, ref)
+}
+
+func TestToHTML_ConvertLinkVideo(t *testing.T) {
+	src := `=> vid.mp4 a documentary on cron`
+	test := ToHTML(src)
+	ref := "<p><video controls>" + `<source src="vid.mp4" type="video/mp4" />` + "Sorry, your browser doesn't support embedded video." + "</video></p>"
+
+	th.AssertEqual(t, test, ref)
+}
+
 // preformatted text
 
 func TestToHTML_ConvertPreformatted(t *testing.T) {

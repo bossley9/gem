@@ -184,14 +184,32 @@ func convertLink(line string) string {
 		name = strings.TrimSpace(split[1])
 	}
 
-	// output <img> or <a> based on url suffix
-	match, _ := regexp.MatchString(".*.(gif|jpg|jpeg|png|svg|webp)", url)
-	if match {
+	regexImg := regexp.MustCompile(`.*\.(avif|bmp|gif|jpg|jpeg|png|svg|webp|xpm)`)
+	regexAudio := regexp.MustCompile(`.*\.(m3u|m4a|mp3|ogg|wav)`)
+	regexVideo := regexp.MustCompile(`.*\.(avi|divx|m4v|mkv|mov|mp4|mpeg|mpg|vob|webm|wmv)`)
+
+	if regexImg.MatchString(url) {
 		output = output + `<img src="` + html.EscapeString(url) + `" alt="`
 		if len(name) > 0 {
 			output = output + html.EscapeString(name)
 		}
 		output = output + `" />`
+
+	} else if regexAudio.MatchString(url) {
+		ext := url[strings.LastIndex(url, ".")+1:]
+
+		output = output + "<audio controls>"
+		output = output + `<source src="` + url + `" type="audio/` + ext + `" />`
+		output = output + "Sorry, your browser doesn't support embedded audio."
+		output = output + "</audio>"
+
+	} else if regexVideo.MatchString(url) {
+		ext := url[strings.LastIndex(url, ".")+1:]
+
+		output = output + "<video controls>"
+		output = output + `<source src="` + url + `" type="video/` + ext + `" />`
+		output = output + "Sorry, your browser doesn't support embedded video."
+		output = output + "</video>"
 
 	} else {
 		output = output + `<a href="` + html.EscapeString(url) + `">`
