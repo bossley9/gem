@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"git.sr.ht/~bossley9/gem/pkg/url"
+
+	"github.com/gomarkdown/markdown"
 )
 
 type lineType int
@@ -119,7 +121,7 @@ func ToHTML(gemtext string) string {
 				output.WriteString("<p>")
 				state = stateParagraph
 			}
-			output.WriteString(line)
+			output.WriteString(convertText(line))
 			// closing paragraph
 			if nextIsNotType(lines, i, lineParagraph) {
 				output.WriteString("</p>")
@@ -155,7 +157,7 @@ func getLineType(line string) lineType {
 	} else if strings.HasPrefix(line, "#") {
 		lineType = lineHeadingOne
 
-	} else if strings.HasPrefix(line, "*") {
+	} else if strings.HasPrefix(line, "* ") {
 		lineType = lineUnorderedListItem
 
 	} else if strings.HasPrefix(line, ">") {
@@ -166,6 +168,22 @@ func getLineType(line string) lineType {
 	}
 
 	return lineType
+}
+
+// converts a given text string to HTML
+func convertText(text string) string {
+	if len(text) == 0 {
+		return text
+	}
+
+	md := string(markdown.ToHTML([]byte(text), nil, nil))
+	// trim outer paragraph tag
+	mdTrimmed := md[3 : len(md)-5]
+	// prefer ambiguous quotations
+	mdFormatted := strings.ReplaceAll(mdTrimmed, "&rdquo;", "&#34;")
+	mdFormatted = strings.ReplaceAll(mdFormatted, "&ldquo;", "&#34;")
+
+	return mdFormatted
 }
 
 // converts a given Gemtext link to HTML
@@ -214,9 +232,9 @@ func convertLink(line string) string {
 	} else {
 		output = output + `<a href="` + html.EscapeString(url) + `">`
 		if len(name) > 0 {
-			output = output + html.EscapeString(name)
+			output = output + convertText(name)
 		} else {
-			output = output + html.EscapeString(url)
+			output = output + convertText(url)
 		}
 		output = output + `</a>`
 
@@ -232,7 +250,7 @@ func convertPreformattedOpening(line string) string {
 
 	alt := strings.TrimSpace(strings.TrimPrefix(line, "```"))
 	if len(alt) > 0 {
-		output = output + "<figcaption>" + html.EscapeString(alt) + "</figcaption>"
+		output = output + "<figcaption>" + convertText(alt) + "</figcaption>"
 	}
 
 	output = output + "<pre><code>"
@@ -263,13 +281,13 @@ func convertHeading(line string, id string) string {
 	}
 
 	headingText := strings.TrimSpace(strings.TrimPrefix(line, headingPrefix))
-	return "<h" + headingNum + ` id="` + id + `"><a href="#` + id + `">` + html.EscapeString(headingText) + "</a></h" + headingNum + ">"
+	return "<h" + headingNum + ` id="` + id + `"><a href="#` + id + `">` + convertText(headingText) + "</a></h" + headingNum + ">"
 }
 
 // converts a given Gemtext unordered list to HTML
 func convertUnorderedListItem(line string) string {
 	listitem := strings.TrimSpace(strings.TrimPrefix(line, "*"))
-	return "<li>" + html.EscapeString(listitem) + "</li>"
+	return "<li>" + convertText(listitem) + "</li>"
 }
 
 // given an array of strings, the current index, and a line type, returns true if
@@ -281,7 +299,7 @@ func nextIsNotType(lines []string, index int, lineType lineType) bool {
 // converts a given Gemtext quote line to HTML
 func convertBlockquote(line string) string {
 	text := strings.TrimSpace(strings.TrimPrefix(line, ">"))
-	return html.EscapeString(text)
+	return convertText(text)
 }
 
 // converts a given Gemtext quote lookahead line to HTML
