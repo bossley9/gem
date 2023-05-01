@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"git.sr.ht/~bossley9/gem"
+	"github.com/bossley9/gem"
 )
 
 func main() {

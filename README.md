@@ -14,5 +14,5 @@ $ make install
 To use this module in other projects:
 
 ```
-go get -u git.sr.ht/~bossley9/gem
+go get -u github.com/bossley9/gem
 ```

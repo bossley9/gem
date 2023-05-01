@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"git.sr.ht/~bossley9/gem/pkg/url"
+	"github.com/bossley9/gem/pkg/url"
 
 	"github.com/gomarkdown/markdown"
 )
