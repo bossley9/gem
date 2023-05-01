@@ -16,55 +16,6 @@ func TestToHTML_ConvertParagraph(t *testing.T) {
 	th.AssertEqual(t, test, ref)
 }
 
-func TestToHTML_ConvertParagraphWithInlineCodeBlock(t *testing.T) {
-	src := "the variable `x` is equivalent to the value `y + 4`"
-	test := ToHTML(src)
-	ref := "<p>the variable <code>x</code> is equivalent to the value <code>y + 4</code></p>"
-	th.AssertEqual(t, test, ref)
-}
-
-func TestToHTML_ConvertParagraphWithStartingSurroundCharacter(t *testing.T) {
-	src := "`x` is a common variable name."
-	test := ToHTML(src)
-	ref := "<p><code>x</code> is a common variable name.</p>"
-	th.AssertEqual(t, test, ref)
-}
-
-func TestToHTML_ConvertParagraphWithEndingSurroundCharacter(t *testing.T) {
-	src := "the backtick is this symbol: `"
-	test := ToHTML(src)
-	ref := "<p>the backtick is this symbol: `</p>"
-	th.AssertEqual(t, test, ref)
-}
-
-func TestToHTML_ConvertParagraphWithInlineBoldItalic(t *testing.T) {
-	src := "this is ***bold and emphasized***."
-	test := ToHTML(src)
-	ref := "<p>this is <strong><em>bold and emphasized</em></strong>.</p>"
-	th.AssertEqual(t, test, ref)
-}
-
-func TestToHTML_ConvertParagraphWithInlineBold(t *testing.T) {
-	src := "this is **bold**."
-	test := ToHTML(src)
-	ref := "<p>this is <strong>bold</strong>.</p>"
-	th.AssertEqual(t, test, ref)
-}
-
-func TestToHTML_ConvertParagraphWithInlineItalic(t *testing.T) {
-	src := "this is *italic*."
-	test := ToHTML(src)
-	ref := "<p>this is <em>italic</em>.</p>"
-	th.AssertEqual(t, test, ref)
-}
-
-func TestToHTML_ConvertParagraphWithInlineEscapes(t *testing.T) {
-	src := "this is \\*not italic\\*, \\*\\*not bold\\*\\*, nor is this \\`inline code\\`."
-	test := ToHTML(src)
-	ref := "<p>this is *not italic*, **not bold**, nor is this `inline code`.</p>"
-	th.AssertEqual(t, test, ref)
-}
-
 func TestToHTML_ConvertWhitespace(t *testing.T) {
 	src := ""
 	test := ToHTML(src)

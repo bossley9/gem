@@ -7,8 +7,6 @@ import (
 	"strings"
 
 	"github.com/bossley9/gem/pkg/url"
-
-	"github.com/gomarkdown/markdown"
 )
 
 type lineType int
@@ -172,18 +170,7 @@ func getLineType(line string) lineType {
 
 // converts a given text string to HTML
 func convertText(text string) string {
-	if len(text) == 0 {
-		return text
-	}
-
-	md := string(markdown.ToHTML([]byte(text), nil, nil))
-	// trim outer paragraph tag
-	mdTrimmed := md[3 : len(md)-5]
-	// prefer ambiguous quotations
-	mdFormatted := strings.ReplaceAll(mdTrimmed, "&rdquo;", "&#34;")
-	mdFormatted = strings.ReplaceAll(mdFormatted, "&ldquo;", "&#34;")
-
-	return mdFormatted
+	return html.EscapeString(text)
 }
 
 // converts a given Gemtext link to HTML
